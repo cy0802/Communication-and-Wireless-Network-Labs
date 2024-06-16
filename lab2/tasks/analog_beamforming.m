@@ -1,8 +1,8 @@
-function [rx1_SNR_dbm, rx2_INR_dbm] = analog_beamforming(P_tx_dBm, N0_dBm, tx_location, rx1_location, rx2_location, tx_antenna_number)
+function [rx1_SNR_dbm, rx2_INR_dbm, P_rx_dbm] = analog_beamforming(P_tx_dBm, N0_dBm, codebook_size, tx_location, rx1_location, rx2_location, tx_antenna_number)
 addpath ./ewa_function;
 
 % Generate codebook for analog beamforming
-tx_beam_direction = 0:10:180; % degree
+tx_beam_direction = 0:codebook_size:180; % degree
 d = 0.5;                      % Distance between antennas (multiple number of wavelength)
 % Generate gain table: calculate power gain of beam at each direction(beam direction * sector angle)
 % gain = gain(beam, sector angle)
@@ -35,27 +35,30 @@ rx1_theta_deg = rx1_theta * 180 / pi;
 rx2_theta_deg = rx2_theta * 180 / pi;
 rx1_sector_index = floor(rx1_theta_deg / 180 * resolution);
 rx2_sector_index = floor(rx2_theta_deg / 180 * resolution);
+if rx1_sector_index == 0
+    rx1_sector_index = 1;
+end
+if rx2_sector_index == 0
+    rx2_sector_index = 1;
+end
 max_gain_rx1 = 0;
 max_gain_rx2 = 0;
 rx1_beam_index = 0;
 rx2_beam_index = 0;
+% fprintf("rx1_sector_index: %d, rx2_sector_index: %d\n", rx1_sector_index, rx2_sector_index);
 for beam_idx = 1:numel(tx_beam_direction)
     if gain(beam_idx, rx1_sector_index) > max_gain_rx1
         max_gain_rx1 = max(gain(beam_idx, rx1_sector_index));
         rx1_beam_index = beam_idx;
-    end
-    if gain(beam_idx, rx2_sector_index) > max_gain_rx2
-        max_gain_rx2 = max(gain(beam_idx, rx2_sector_index));
-        rx2_beam_index = beam_idx;
     end
 end
 % disp(sprintf('rx1_angle: %f, rx1_sector_index: %d, rx1_beam_index: %d, max_gain: %f', rx1_theta_deg, rx1_sector_index, rx1_beam_index, max_gain_rx1));
 % disp(sprintf('rx2_angle: %f, rx2_sector_index: %d, rx2_beam_index: %d, max_gain: %f', rx2_theta_deg , rx2_sector_index, rx2_beam_index, max_gain_rx2));
 
 % Uncomment to plot the beam pattern and show the results of optimal beam
-% figure(1); 
-% polarplot(phi, gain(rx1_beam_index,:));
-% title('Power Gain in different directions');
+figure(1); 
+polarplot(phi, gain(rx1_beam_index,:));
+title('Power Gain in different directions');
 
 % figure(2); 
 % plot(phi_deg, gain(rx1_beam_index, :)); 
@@ -64,12 +67,12 @@ end
 % ylabel('Power Gain');
 % title('Power Gain vs. Angle');
 
-fprintf('Beam Scanning Results\n');
-fprintf('\tReceiver 1 Distance: %f m\tAngle of departure: %2f degree\n', rx1_distance, phi_deg(rx1_sector_index));
-fprintf('\tReceiver 2 Distance: %f m\tAngle of departure: %2f degree\n', rx2_distance, phi_deg(rx2_sector_index));
-fprintf('\tClosest beam direction is %.2f (index: %d)\n', tx_beam_direction(rx1_beam_index), rx1_beam_index);
-fprintf('\t%d-th beam is the best beam for rx1 (with power gain %f)\n', rx1_beam_index, gain(rx1_beam_index, rx1_sector_index));
-fprintf('\t%d-th beam side lobe for rx2 (with power gain %f)\n', rx1_beam_index, gain(rx1_beam_index, rx2_sector_index));
+% fprintf('Beam Scanning Results\n');
+% fprintf('\tReceiver 1 Distance: %f m\tAngle of departure: %2f degree\n', rx1_distance, phi_deg(rx1_sector_index));
+% fprintf('\tReceiver 2 Distance: %f m\tAngle of departure: %2f degree\n', rx2_distance, phi_deg(rx2_sector_index));
+% fprintf('\tClosest beam direction is %.2f (index: %d)\n', tx_beam_direction(rx1_beam_index), rx1_beam_index);
+% fprintf('\t%d-th beam is the best beam for rx1 (with power gain %f)\n', rx1_beam_index, gain(rx1_beam_index, rx1_sector_index));
+% fprintf('\t%d-th beam side lobe for rx2 (with power gain %f)\n', rx1_beam_index, gain(rx1_beam_index, rx2_sector_index));
 
 % TODO2: Calculate receiving power and SNR (Prx-noise)
 % Hint: Use friis equation with gain
@@ -89,5 +92,6 @@ pathloss_dbm_rx2 = friis_equation(freq, rx2_interference, rx2_gain, rx2_distance
 P_interference_dbm = pathloss_dbm_rx2 + P_tx_dBm;
 rx2_INR_dbm = P_interference_dbm - N0_dBm;
 
+% fprintf("SNR for rx1: %f dBm, INR for rx2: %f\n", rx1_SNR_dbm, rx2_INR_dbm);
 % fprintf('tx_gain_1: %f\n', tx_gain_1);
-% fprintf('Pathloss for rx1: %f dBm\n', pathloss_dbm_rx1);
+% fprintf('Pathloss for rx1: %f dBm, pathloss for rx2: %f\n', pathloss_dbm_rx1, pathloss_dbm_rx2);

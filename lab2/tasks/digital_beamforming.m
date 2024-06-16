@@ -1,4 +1,4 @@
-function [rx1_SNR_dbm, rx2_SNR_dbm, rx1_noW_SNR_dbm, rx2_noW_SNR_dbm] = digital_beamforming(P_tx_dBm, N0_dBm, tx_location, rx1_location, rx2_location, tx_nums, rx_nums)
+function [rx1_SNR_dbm, rx2_SNR_dbm, rx1_noW_SNR_dbm, rx2_noW_SNR_dbm, H_eq_scalar, error_rx1] = digital_beamforming(P_tx_dBm, N0_dBm, tx_location, rx1_location, rx2_location, tx_nums, rx_nums)
 addpath ./ewa_function;
 
 % Calculate P_rx
@@ -45,6 +45,7 @@ y = H * W * x + n; % with precoding
 
 H_eq_noW = sum(H, 2);
 H_eq = sum(H * W, 2);
+H_eq_scalar = H_eq(1);
 
 % TODO4: Decode signal with both with & without ZFBF H_eq
 % Hint: Estimate x_hat based on the received signal y
@@ -57,6 +58,7 @@ x_hat = y ./ H_eq;
 
 error_noW = (x - x_hat_noW) .^ 2;
 error = (x - x_hat) .^ 2;
+error_rx1 = sum(error(1, :)) / num_data;
 
 rx1_signal_power = sum(x(1, :), "all") / num_data;
 rx2_signal_power = sum(x(2, :), "all") / num_data;
