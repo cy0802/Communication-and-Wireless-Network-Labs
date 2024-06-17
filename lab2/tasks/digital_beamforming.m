@@ -44,21 +44,22 @@ y = H * W * x + n; % with precoding
 % Hint: with ZFBF: H * W = I * constant. Please calculate the constant (H_eq)
 
 H_eq_noW = sum(H, 2);
-H_eq = sum(H * W, 2);
-H_eq_scalar = H_eq(1);
+HW = H * W;
+H_eq_scalar = HW(1, 1);
 
 % TODO4: Decode signal with both with & without ZFBF H_eq
 % Hint: Estimate x_hat based on the received signal y
 
 x_hat_noW =  y_noW ./ H_eq_noW;
-x_hat = y ./ H_eq;
+x_hat = y ./ H_eq_scalar;
 
 % TODO5: Calculate deoding errors and SNR (|x|/|x-x'|)
 % Hint: The difference between the transmitted and estimated signals
 
-error_noW = (x - x_hat_noW) .^ 2;
-error = (x - x_hat) .^ 2;
-error_rx1 = sum(error(1, :)) / num_data;
+error_noW = ((abs(x - x_hat_noW)) .^ 2);
+error = (abs(x - x_hat)) .^ 2;
+error_rx1 = sum(error(1, :)) ./ num_data;
+
 
 rx1_signal_power = sum(x(1, :), "all") / num_data;
 rx2_signal_power = sum(x(2, :), "all") / num_data;

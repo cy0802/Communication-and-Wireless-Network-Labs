@@ -1,4 +1,4 @@
-function [rx1_SNR_dbm, rx2_INR_dbm, P_rx_dbm] = analog_beamforming(P_tx_dBm, N0_dBm, codebook_size, tx_location, rx1_location, rx2_location, tx_antenna_number)
+function [rx1_SNR_dbm, rx2_INR_dbm, P_rx_dbm, angle_bt_rxs] = analog_beamforming(P_tx_dBm, N0_dBm, codebook_size, tx_location, rx1_location, rx2_location, tx_antenna_number)
 addpath ./ewa_function;
 
 % Generate codebook for analog beamforming
@@ -33,6 +33,7 @@ rx1_beam_index = 0;
 
 rx1_theta_deg = rx1_theta * 180 / pi;
 rx2_theta_deg = rx2_theta * 180 / pi;
+angle_bt_rxs = abs(rx1_theta_deg - rx2_theta_deg);
 rx1_sector_index = floor(rx1_theta_deg / 180 * resolution);
 rx2_sector_index = floor(rx2_theta_deg / 180 * resolution);
 if rx1_sector_index == 0
@@ -42,9 +43,7 @@ if rx2_sector_index == 0
     rx2_sector_index = 1;
 end
 max_gain_rx1 = 0;
-max_gain_rx2 = 0;
 rx1_beam_index = 0;
-rx2_beam_index = 0;
 % fprintf("rx1_sector_index: %d, rx2_sector_index: %d\n", rx1_sector_index, rx2_sector_index);
 for beam_idx = 1:numel(tx_beam_direction)
     if gain(beam_idx, rx1_sector_index) > max_gain_rx1
@@ -53,12 +52,12 @@ for beam_idx = 1:numel(tx_beam_direction)
     end
 end
 % disp(sprintf('rx1_angle: %f, rx1_sector_index: %d, rx1_beam_index: %d, max_gain: %f', rx1_theta_deg, rx1_sector_index, rx1_beam_index, max_gain_rx1));
-% disp(sprintf('rx2_angle: %f, rx2_sector_index: %d, rx2_beam_index: %d, max_gain: %f', rx2_theta_deg , rx2_sector_index, rx2_beam_index, max_gain_rx2));
+% disp(sprintf('rx2_angle: %f, rx2_sector_index: %d', rx2_theta_deg , rx2_sector_index));
 
 % Uncomment to plot the beam pattern and show the results of optimal beam
-figure(1); 
-polarplot(phi, gain(rx1_beam_index,:));
-title('Power Gain in different directions');
+% figure(1); 
+% polarplot(phi, gain(rx1_beam_index,:));
+% title('Power Gain in different directions');
 
 % figure(2); 
 % plot(phi_deg, gain(rx1_beam_index, :)); 
